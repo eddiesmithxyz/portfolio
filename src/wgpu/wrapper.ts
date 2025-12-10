@@ -1,4 +1,7 @@
 import { shaders } from "./shaders.ts";
+import { createCubeVerts } from "./cube.ts";
+
+import { mat4 } from 'wgpu-matrix';
 
 export class WGPU {
   private device: GPUDevice = {} as GPUDevice;
@@ -40,15 +43,10 @@ export class WGPU {
           {
             shaderLocation: 0,
             offset: 0,
-            format: "float32x4"
-          },
-          {
-            shaderLocation: 1,
-            offset: 16,
-            format: "float32x4"
+            format: "float32x3"
           }
         ],
-        arrayStride: 32,
+        arrayStride: 12,
         stepMode: "vertex"
       } as GPUVertexBufferLayout
     ];
@@ -77,40 +75,63 @@ export class WGPU {
 
 
   render() {
-    const verts = new Float32Array([
-      0.0, 0.6, 0, 1, 
-      1, 0, 0, 1, 
-      
-      -0.5, -0.6, 0, 1, 
-      0, 1, 0, 1, 1, 
-      
-      -0.6, 0, 1, 
-      0, 0, 1, 1,
-    ]);
+    const { positions, indices } = createCubeVerts();
 
     const vertexBuffer = this.device.createBuffer({
-      size: verts.byteLength,
+      size: positions.byteLength,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
     });
+    this.device.queue.writeBuffer(vertexBuffer, 0, positions, 0, positions.length);
 
-    this.device.queue.writeBuffer(vertexBuffer, 0, verts, 0, verts.length);
+    const indexBuffer = this.device.createBuffer({
+      size: indices.byteLength,
+      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+    });
+    this.device.queue.writeBuffer(indexBuffer, 0, indices, 0, indices.length);
+
+
+
+    const uniformBuffer = this.device.createBuffer({
+      size: 16*4,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    });
+    const rotationMatrix = mat4.multiply(mat4.rotationY(1), mat4.rotationX(1.5));
+    const translationMatrix = mat4.translation([0, 0, -4]);
+    const modelMatrix = mat4.multiply(translationMatrix, rotationMatrix);
+    const viewProjectionMatrix = mat4.perspective(
+      2.0,
+      this.ctx.canvas.width / this.ctx.canvas.height,
+      0.1,
+      100.0
+    );
+    const modelViewProjectionMatrix = mat4.multiply(viewProjectionMatrix, modelMatrix);
+    this.device.queue.writeBuffer(uniformBuffer, 0, modelViewProjectionMatrix as Float32Array<ArrayBuffer>, 0, 16);
+    
+    const bindGroup = this.device.createBindGroup({
+      layout: this.renderPipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: uniformBuffer }},
+      ],
+    });
 
 
 
     const passEncoder = this.commandEncoder.beginRenderPass({
       colorAttachments: [
-      {
-        clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1 },
-        loadOp: "clear",
-        storeOp: "store",
-        view: this.ctx.getCurrentTexture().createView()
-      }
+        {
+          clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1 },
+          loadOp: "clear",
+          storeOp: "store",
+          view: this.ctx.getCurrentTexture().createView()
+        }
       ]
     });
 
     passEncoder.setPipeline(this.renderPipeline);
     passEncoder.setVertexBuffer(0, vertexBuffer);
-    passEncoder.draw(3);
+    passEncoder.setIndexBuffer(indexBuffer, "uint16");
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.drawIndexed(indices.length)
 
     passEncoder.end();
     this.device.queue.submit([this.commandEncoder.finish()]);
