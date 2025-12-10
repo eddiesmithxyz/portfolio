@@ -1,4 +1,8 @@
-import {WGPU} from "./wgpu/wrapper.ts"
+import {WGPU} from "./wgpu/wgpu.ts"
+import { createCubeData } from "./wgpu/cube.ts";
+
+
+
 
 async function main() {
   const wgpu = new WGPU();
@@ -10,7 +14,16 @@ async function main() {
 
   window.wgpu = wgpu;
 
-  wgpu.render()
+  const cubeData = createCubeData();
+  wgpu.createBuffersAndPipeline(cubeData);
+
+  function render() {
+    //wgpu.update();
+
+    wgpu.render();
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
 
 }
 
