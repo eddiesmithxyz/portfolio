@@ -1,6 +1,24 @@
 import { mat4, vec3, quat, type Quat, type Vec3, type Mat4 } from 'wgpu-matrix';
 
+function falloff(signedDist: number): number {
+  // given the distance to the surface of the field (sdf=0),
+  // get the amount we should be applying gravity
 
+  // this attempts to push objects into a stable orbit through the sdf=0 region,
+  // and pushes objects out from sdf<0
+
+  let x = Math.max(signedDist, -1);
+  return Math.sin(Math.PI * Math.sign(x) / (Math.abs(x) + 1))
+}
+
+function sdf(pos: Vec3): number {
+  const radius = 10;
+  return pos.length - radius;
+}
+
+function sdfNormal(pos: Vec3): Vec3 {
+  return vec3.normalize(pos);
+}
 
 
 class CubeInstance {
@@ -19,7 +37,14 @@ class CubeInstance {
   }
 
   update(deltaTime: number) {
-    this.pos = vec3.add(this.pos, vec3.mulScalar(this.velocity, deltaTime));
+    const gravityAmount = falloff(sdf(this.pos));
+    const gravityDirection = vec3.scale(sdfNormal(this.pos), 1);
+
+    const mass = 0.1;
+    const accel = vec3.scale(gravityDirection, gravityAmount / mass);
+
+    this.velocity = vec3.add(this.velocity, vec3.scale(accel, deltaTime));
+    this.pos = vec3.add(this.pos, vec3.scale(this.velocity, deltaTime));
   }
 }
 
