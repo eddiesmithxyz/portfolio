@@ -21,7 +21,7 @@ function render(wgpu: WGPU) {
     0.1,
     100.0
   );
-  wgpu.render(scene.instanceMatrices, mat4.multiply(projMatrix, scene.viewMatrix));
+  wgpu.render(scene.instanceData, mat4.multiply(projMatrix, scene.viewMatrix));
 
   requestAnimationFrame(() => render(wgpu));
 }

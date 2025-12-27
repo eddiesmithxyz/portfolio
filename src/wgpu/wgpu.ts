@@ -89,9 +89,15 @@ export class WGPU {
             shaderLocation: 5,
             offset: 48,
             format: "float32x4"
+          },
+          {
+            shaderLocation: 6,
+            offset: 64,
+            format: "float32"
           }
+          
         ],
-        arrayStride: 64,
+        arrayStride: 68,
         stepMode: "instance"
       } as GPUVertexBufferLayout,
     ];
@@ -132,7 +138,7 @@ export class WGPU {
 
 
     this.instanceBuffer = this.device.createBuffer({
-      size: this.instanceCount * 64,
+      size: this.instanceCount * 4 * 17, // 16 floats for model matrix + 1 float for id
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
     });
 
@@ -153,13 +159,12 @@ export class WGPU {
   }
 
 
-  render(instanceMatrices: Float32Array, viewProjectionMatrix: Float32Array) {
+  render(instanceData: Float32Array, viewProjectionMatrix: Float32Array) {
     if (!this.initialised) {
       throw ("WebGPU not initialised");
     }
 
-    
-    this.device.queue.writeBuffer(this.instanceBuffer, 0, instanceMatrices as Float32Array<ArrayBuffer>, 0, this.instanceCount * 16);
+    this.device.queue.writeBuffer(this.instanceBuffer, 0, instanceData as Float32Array<ArrayBuffer>, 0, this.instanceCount * 17);
     this.device.queue.writeBuffer(this.uniformBuffer, 0, viewProjectionMatrix as Float32Array<ArrayBuffer>, 0, 16);
     
 
