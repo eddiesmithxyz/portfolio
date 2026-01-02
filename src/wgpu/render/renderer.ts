@@ -1,13 +1,11 @@
 import { shaders } from "./shaders.ts";
 
-export class WGPU {
+export class WGPUrenderer {
   private initialised = false;
 
   private device: GPUDevice = {} as GPUDevice;
   public ctx: GPUCanvasContext = {} as GPUCanvasContext;
   private renderPipeline: GPURenderPipeline = {} as GPURenderPipeline; 
-
-  private aspectRatio: number = 1.0;
 
   private instanceCount = 0;
   private vertexCount = 0;
@@ -147,7 +145,10 @@ export class WGPU {
         depthCompare: 'less',
         format: 'depth24plus',
       },
-      layout: pipelineLayout
+      layout: pipelineLayout,
+      // multisample: {
+      //   count: 4,
+      // },
     });
 
 

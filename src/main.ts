@@ -1,5 +1,5 @@
-import {WGPU} from "./wgpu/wgpu.ts"
-import { createSquareData } from "./wgpu/square.ts";
+import {WGPUrenderer} from "./wgpu/render/renderer.ts"
+import { createSquareData } from "./wgpu/render/square.ts";
 import { Scene } from "./scene/scene.ts";
 import { mat4 } from "wgpu-matrix";
 
@@ -8,7 +8,7 @@ const scene = new Scene();
 
 let lastTime = Date.now();
 
-function render(wgpu: WGPU) {
+function render(renderer: WGPUrenderer) {
   const currentTime = Date.now();
   const deltaTime = (currentTime - lastTime) / 1000;
   lastTime = currentTime;
@@ -17,32 +17,31 @@ function render(wgpu: WGPU) {
 
   const projMatrix = mat4.perspective(
     2.0,
-    wgpu.ctx.canvas.width / wgpu.ctx.canvas.height,
+    renderer.ctx.canvas.width / renderer.ctx.canvas.height,
     0.1,
     1000.0
   );
-  wgpu.render(scene.instanceData, mat4.multiply(projMatrix, scene.viewMatrix));
-
-  requestAnimationFrame(() => render(wgpu));
+  renderer.render(scene.instanceData, mat4.multiply(projMatrix, scene.viewMatrix));
+  requestAnimationFrame(() => render(renderer));
 }
 
 
 async function main() {
-  const wgpu = new WGPU();
+  const renderer = new WGPUrenderer();
 
-  const success = await wgpu.init()
+  const success = await renderer.init()
   if (!success) 
     return;
     
 
-  (window as any).wgpu = wgpu; // debug
+  (window as any).renderer = renderer; // debug
 
 
   const vertData = createSquareData();
-  wgpu.createBuffersAndPipeline(vertData, scene.instanceCount);
+  renderer.createBuffersAndPipeline(vertData, scene.instanceCount);
 
   lastTime = Date.now();
-  requestAnimationFrame(() => render(wgpu));
+  requestAnimationFrame(() => render(renderer));
 }
 
 main()

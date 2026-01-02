@@ -152,6 +152,8 @@ export class Scene {
 
     for (let i = 0; i < this.instanceCount; i++) {
       const cube = this.cubes[i];
+
+      // if (window.RUN)
       cube.update(deltaTime);
       this.instanceData.set(cube.getInstanceData(), i * 17);
     }
