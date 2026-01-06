@@ -11,7 +11,20 @@ export class WGPUComputer {
   private instanceCount: number;
   private instanceDataBuffer: GPUBuffer;
   private renderInstanceBuffer: GPUBuffer;
-  private resultBuffer: GPUBuffer;
+
+
+  private uniformBuffer: GPUBuffer;
+
+
+  // could auto-generate this list from the shader code but not necessary for a small number
+  private uniforms = new Map<string, {length: number, value: Array<number>}>([
+    ["deltaTime",       {length: 1, value: [0]}],
+    ["smoothingRadius", {length: 1, value: [1]}],
+    ["smoothRad9", {length: 1, value: [0]}],
+  ]);
+  private uniformsLength = Array.from(this.uniforms.values()).reduce((acc, u) => acc + u.length, 0);
+
+  private resultBuffer: GPUBuffer; // debug
 
 
   constructor(device: GPUDevice, instanceCount: number, initialInstanceData: Float32Array<ArrayBuffer>, renderInstanceBuffer: GPUBuffer) {
@@ -24,9 +37,27 @@ export class WGPUComputer {
       code: particleUpdateShaderSrc
     });
     
+    const bindGroupLayout = this.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type: "storage" },
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type: "uniform" },
+        },
+      ],
+    });
+    const pipelineLayout = this.device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayout],
+    });
+
     this.pipeline = device.createComputePipeline({
       label: "particle update pipeline",
-      layout: "auto",
+      layout: pipelineLayout,
       compute: {
         module
       }
@@ -39,6 +70,11 @@ export class WGPUComputer {
     });
     device.queue.writeBuffer(this.instanceDataBuffer, 0, initialInstanceData)
 
+    this.uniformBuffer = device.createBuffer({
+      size: this.uniformsLength * 4,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    });
+
     this.resultBuffer = device.createBuffer({
       size: this.instanceDataBuffer.size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
@@ -50,11 +86,26 @@ export class WGPUComputer {
       layout: this.pipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: this.instanceDataBuffer }},
+        { binding: 1, resource: { buffer: this.uniformBuffer }},
       ],
     })
   }
 
-  async run() {
+  async run(deltaTime: number) {
+    // update uniforms
+    this.uniforms.get("deltaTime")!.value[0] = deltaTime;
+    this.uniforms.get("smoothRad9")!.value[0] = Math.pow(this.uniforms.get("smoothingRadius")!.value[0], 9);
+
+    // write uniforms
+    const uniformData = new Float32Array(this.uniformsLength);
+    let i = 0;
+    for (const [_, { length, value }] of this.uniforms) {
+      uniformData.set(value, i);
+      i += length;
+    }
+    this.device.queue.writeBuffer(this.uniformBuffer, 0, uniformData, 0);
+
+
     
     // create compute commands
     const encoder = this.device.createCommandEncoder();
@@ -69,10 +120,10 @@ export class WGPUComputer {
     const commandBuffer = encoder.finish();
     this.device.queue.submit([commandBuffer]);
 
-    if (window.BIGLOG) {
+    if (window.LOG_INSTANCE_DATA) {
       // copy instance data to result buffer and print
 
-      window.BIGLOG = false;
+      window.LOG_INSTANCE_DATA = false;
       await this.resultBuffer.mapAsync(GPUMapMode.READ);
       const result = new Float32Array(this.resultBuffer.getMappedRange());
       

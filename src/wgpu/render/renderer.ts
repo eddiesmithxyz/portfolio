@@ -14,7 +14,7 @@ export class WGPURenderer {
 
   private vertexBuffer: GPUBuffer = {} as GPUBuffer;
   public instanceBuffer: GPUBuffer = {} as GPUBuffer;  
-  private uniformBuffers: { viewProjectionMatrix: GPUBuffer, aspectRatio: GPUBuffer } = {} as { viewProjectionMatrix: GPUBuffer, aspectRatio: GPUBuffer };
+  private uniformBuffer: GPUBuffer = {} as GPUBuffer;
   private bindGroup: GPUBindGroup = {} as GPUBindGroup;
 
   private depthTexture: GPUTexture | null = null;
@@ -100,27 +100,6 @@ export class WGPURenderer {
         stepMode: "instance"
       } as GPUVertexBufferLayout,
     ];
-    const bindGroupLayout = this.device.createBindGroupLayout({
-      entries: [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.VERTEX,
-          buffer: {
-            type: "uniform",
-          },
-        },
-        {
-          binding: 1,
-          visibility: GPUShaderStage.VERTEX,
-          buffer: {
-            type: "uniform",
-          },
-        },
-      ],
-    });
-    const pipelineLayout = this.device.createPipelineLayout({
-      bindGroupLayouts: [bindGroupLayout],
-    });
 
     const shaderModule = this.device.createShaderModule({code: renderShaders});
     this.renderPipeline = this.device.createRenderPipeline({
@@ -145,7 +124,7 @@ export class WGPURenderer {
         depthCompare: 'less',
         format: 'depth24plus',
       },
-      layout: pipelineLayout,
+      layout: "auto",
       // multisample: {
       //   count: 4,
       // },
@@ -166,22 +145,19 @@ export class WGPURenderer {
 
     
     // UNIFORMS
-    this.uniformBuffers.viewProjectionMatrix = this.device.createBuffer({
-      size: 16*4,
+    const uniformSize =
+      16 * 4 +  // view-proj matrix
+       1 * 4 +  // aspect ratio
+      15 * 4;   // padding (required by webgpu)
+    this.uniformBuffer = this.device.createBuffer({
+      size: uniformSize,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
-    this.uniformBuffers.aspectRatio = this.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
-    
-
     
     this.bindGroup = this.device.createBindGroup({
-      layout: bindGroupLayout,
+      layout: this.renderPipeline.getBindGroupLayout(0),
       entries: [
-        { binding: 0, resource: { buffer: this.uniformBuffers.viewProjectionMatrix }},
-        { binding: 1, resource: { buffer: this.uniformBuffers.aspectRatio }},
+        { binding: 0, resource: { buffer: this.uniformBuffer }},
       ],
     });
 
@@ -196,8 +172,8 @@ export class WGPURenderer {
 
     const canvasTexture = this.ctx.getCurrentTexture();
 
-    this.device.queue.writeBuffer(this.uniformBuffers.viewProjectionMatrix, 0, viewProjectionMatrix as Float32Array<ArrayBuffer>, 0, 16);
-    this.device.queue.writeBuffer(this.uniformBuffers.aspectRatio, 0, new Float32Array([canvasTexture.width / canvasTexture.height]), 0, 1);
+    const uniformData = new Float32Array([...viewProjectionMatrix, canvasTexture.width / canvasTexture.height])
+    this.device.queue.writeBuffer(this.uniformBuffer, 0, uniformData, 0);
 
     // create depth texture if needed
     if (!this.depthTexture || this.depthTexture.width !== canvasTexture.width || this.depthTexture.height !== canvasTexture.height) {

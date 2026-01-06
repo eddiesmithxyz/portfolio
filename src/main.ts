@@ -32,7 +32,7 @@ function render(renderer: WGPURenderer, computer: WGPUComputer) {
     1000.0
   );
 
-  computer.run();
+  computer.run(deltaTime);
   renderer.render(mat4.multiply(projMatrix, scene.viewMatrix));
   requestAnimationFrame(() => render(renderer, computer));
 }

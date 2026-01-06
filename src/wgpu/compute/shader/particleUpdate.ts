@@ -8,9 +8,16 @@ const velocityDamping = -1;
 const gravityClamp = 200.0; // limit gravity
 const accelDeltaTime = 0.03; // hardcoded deltaTime for acceleration calculation to prevent explosion
 
-const deltaTime = 0.03; // REPLACE WITH UNIFORM
 
 @group(0) @binding(0) var<storage, read_write> data: array<f32>;
+
+struct Uniforms {
+  deltaTime: f32,
+  smoothingRadius: f32,
+  smoothRad9: f32,
+}
+@group(0) @binding(1) var<uniform> uniforms: Uniforms;
+
 
 ${sdfSrc}
 
@@ -30,7 +37,7 @@ ${sdfSrc}
   // process
   let dist = sdf(position);
 
-  let dDistdt = (dist - lastDist) / deltaTime;
+  let dDistdt = (dist - lastDist) / uniforms.deltaTime;
   var gravityAmount = -positionStiffness*dist - velocityDamping*dDistdt;
   gravityAmount = atan(gravityAmount / gravityClamp) * gravityClamp;
 
@@ -38,7 +45,7 @@ ${sdfSrc}
   let acceleration = gravity / mass;
 
   velocity += acceleration * accelDeltaTime;
-  position += velocity * deltaTime;
+  position += velocity * uniforms.deltaTime;
 
 
 

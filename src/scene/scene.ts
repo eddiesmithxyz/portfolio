@@ -43,7 +43,7 @@ export class Scene {
 
 
           let pos = vec3.create(2*x-(side-1), 2*y-(side-1), 2*z-(side-1)) as Vec3;  // vec3.create(0, 2*y-(side-1), 2*z-(side-1))
-          pos = vec3.multiply(pos, vec3.create(8, 0.3, 0.3));
+          pos = vec3.multiply(pos, vec3.create(15, 0.3, 0.3));
           pos = vec3.add(pos, vec3.create(0, 50, 0));
 
           // random velocity

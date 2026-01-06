@@ -1,4 +1,10 @@
 export const renderShaders = /* wgsl */`
+struct Uniforms {
+  viewProjectionMatrix : mat4x4<f32>,
+  aspectRatio : f32
+}
+@group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
 struct VertexOut {
   @builtin(position) position : vec4f,
   @location(0) colour : vec4f,
@@ -16,8 +22,6 @@ struct InstanceInput {
   @location(4) lastDist : f32
 }
 
-@group(0) @binding(0) var<uniform> viewProjectionMatrix : mat4x4<f32>;
-@group(0) @binding(1) var<uniform> aspectRatio : f32;
 
 @vertex
 fn vertex_main(
@@ -28,8 +32,8 @@ fn vertex_main(
 
   const particleSize = 0.005;
 
-  output.position = viewProjectionMatrix * vec4f(instance.position, 1.0);
-  let vertPos = vertex.position.xy * vec2f(particleSize / aspectRatio, particleSize) * output.position.w;
+  output.position = uniforms.viewProjectionMatrix * vec4f(instance.position, 1.0);
+  let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize) * output.position.w;
   output.position += vec4f(vertPos, 0., 0.);
 
   // var baseColor = vec4f(0.4, 0.6, 0.8, 1.0);
