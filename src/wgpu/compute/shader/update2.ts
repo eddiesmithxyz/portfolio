@@ -35,6 +35,6 @@ position += velocity * accelDeltaTime;
 particles[id].position = vec4<f32>(position.xyz, 1.0);
 particles[id].velocity = vec4<f32>(velocity.xyz, 1.0);
 
-
+// particles[id].position = vec4<f32>(-21.3, -84.1, -0.1, 1.0);
 `;
 export const update2Src = updateTemplate(update1body);

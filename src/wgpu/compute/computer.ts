@@ -1,12 +1,16 @@
+import { instanceDataLength, logInstanceData, sideLength } from "../common";
+
 import { update1Src } from "./shader/update1";
 import { update2Src } from "./shader/update2";
-import { instanceDataLength, logInstanceData, sideLength } from "../common";
+import { assignCellShaderSrc } from "./shader/grid/assignCell";
+
 
 export class WGPUComputer {
   private device: GPUDevice;
 
+  private computeShaders = [assignCellShaderSrc, update1Src, update2Src];
 
-  private pipelines: GPUComputePipeline[];
+  private pipelines: GPUComputePipeline[] = [];
   private bindGroup: GPUBindGroup;
 
   private instanceCount: number;
@@ -23,7 +27,7 @@ export class WGPUComputer {
   ]);
   private uniformsLength = Array.from(this.uniforms.values()).reduce((acc, u) => acc + u.length, 0);
 
-  private resultBuffer: GPUBuffer; // debug
+  private resultBuffer: GPUBuffer; // for debug
 
 
   constructor(device: GPUDevice, instanceCount: number, initialInstanceData: Float32Array<ArrayBuffer>, renderInstanceBuffer: GPUBuffer) {
@@ -51,23 +55,21 @@ export class WGPUComputer {
     });
 
     
-    this.pipelines = [[1, update1Src], [2, update2Src]]
-      .map(([id, src]) => {
+    // create a pipeline for each shader 
+    for (let i = 0; i < this.computeShaders.length; i++) {
       const module = this.device.createShaderModule({
-        label: `particle update ${id}`,
-        code: src as string
+        label: `particle update ${i}`,
+        code: this.computeShaders[i]
       });
 
-      return device.createComputePipeline({
-        label: `particle update ${id} pipeline`,
+      this.pipelines.push(device.createComputePipeline({
+        label: `particle update ${i} pipeline`,
         layout: pipelineLayout,
         compute: {
           module
         }
-      });
-    })
-
-
+      }));
+    }
 
     
     this.instanceDataBuffer = device.createBuffer({
@@ -112,7 +114,7 @@ export class WGPUComputer {
 
 
     
-    // create compute commands
+    // run each compute shader
     const encoder = this.device.createCommandEncoder();
     for (const pipeline of this.pipelines) {
       const pass = encoder.beginComputePass();
@@ -127,7 +129,8 @@ export class WGPUComputer {
     const commandBuffer = encoder.finish();
     this.device.queue.submit([commandBuffer]);
 
-    if (window.LOG_INSTANCE_DATA) {
+    if (window.LOG_INSTANCE_DATA) 
+      {
       // copy instance data to result buffer and print
 
       window.LOG_INSTANCE_DATA = false;

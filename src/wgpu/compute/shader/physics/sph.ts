@@ -1,10 +1,10 @@
 // https://wickedengine.net/2018/05/scalabe-gpu-fluid-simulation/comment-page-1/
 
-import { sideLength, wgslNumStr as str } from "../../common";
+import { sideLength, wgslNumStr as str } from "../../../common";
 
 
 // PARAMETERS
-const smoothingRadius = 1;
+export const smoothingRadius = 1;
 
 const pressureConstant = 250;
 const referenceDensity = 1;

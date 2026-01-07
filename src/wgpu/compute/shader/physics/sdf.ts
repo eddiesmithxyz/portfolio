@@ -1,4 +1,4 @@
-import { wgslNumStr as str } from "../../common";
+import { wgslNumStr as str } from "../../../common";
 
 const mass = str(0.05);
 const positionStiffness = str(-0.24);

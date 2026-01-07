@@ -1,26 +1,13 @@
 import { instanceDataLength, sideLength } from "../../common"
-import { sdfSrc } from "./sdf"
-import { sphSrc } from "./sph"
+import { shaderInputLayoutSrc } from "./inputLayout";
+import { sdfSrc } from "./physics/sdf"
+import { sphSrc } from "./physics/sph"
 export const updateTemplate = (body: string) => /* wgsl */`
 
 
 const accelDeltaTime = 0.01; // hardcoded deltaTime for acceleration calculation to prevent explosion
 
-struct Particle {
-  position: vec4<f32>, // xyz used
-  velocity: vec4<f32>, // xyz used
-  lastDist: f32,
-  density: f32,
-  pressure: f32,
-  _pad: f32,
-}
-@group(0) @binding(0) var<storage, read_write> particles: array<Particle>;
-
-struct Uniforms {
-  deltaTime: f32
-}
-@group(0) @binding(1) var<uniform> uniforms: Uniforms;
-
+${shaderInputLayoutSrc}
 
 ${sdfSrc}
 
@@ -34,10 +21,6 @@ ${sphSrc}
   let id = workgroup_id.x * ${sideLength * sideLength} + local_invocation_id.y * ${sideLength} + local_invocation_id.z;
   let particle = particles[id];
 
-  // let fieldDist = sdf(position);
-  // let acceleration = gravityAccel(position, fieldDist, particle.lastDist);
-  // particles[id].lastDist = fieldDist;
-
   ${body}
 }
 
@@ -48,9 +31,7 @@ ${sphSrc}
 
 
 // print linked shader
-const numbered = (src: string) => src
+export const numberedShaderLog = (src: string) => console.log(src
   .split('\n')  
   .map((line, i) => `${line} ${i + 1}`)
-  .join('\n');  
-
-// console.log(numbered);
+  .join('\n'));  
