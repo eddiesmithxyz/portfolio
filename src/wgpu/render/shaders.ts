@@ -18,8 +18,7 @@ struct VertexInput {
 
 struct InstanceInput {
   @location(2) position : vec4f,
-  @location(3) velocity : vec4f,
-  @location(4) lastDist : vec4f
+  @location(3) velocity : vec4f
 }
 
 
@@ -30,7 +29,7 @@ fn vertex_main(
 ) -> VertexOut {
   var output : VertexOut;
 
-  const particleSize = 0.005;
+  const particleSize = 0.003;
 
   output.position = uniforms.viewProjectionMatrix * instance.position;
   let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize) * output.position.w;

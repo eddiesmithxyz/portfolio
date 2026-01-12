@@ -1,6 +1,6 @@
 // https://wickedengine.net/2018/05/scalabe-gpu-fluid-simulation/comment-page-1/
 
-import { sideLength, wgslNumStr as str } from "../../../common";
+import { wgslNumStr as str } from "../../../common";
 import { smoothingRadius, iterateNeighbours } from "../grid/gridAccess.ts";
 
 
@@ -11,7 +11,6 @@ const referenceDensity = 1;
 
 const viscosityConstant = 0.118;
 
-const particleCount = sideLength * sideLength * sideLength;
 const particleMass = 1;
 
 
@@ -23,8 +22,6 @@ const viscConst = str(45 / (Math.PI * Math.pow(smoothingRadius, 6)));
 
 // ------ SHADER ------
 export const sphSrc = /* wgsl */`
-
-const particleCount = ${particleCount};
 
 const h = ${str(smoothingRadius)};
 const h2 = ${str(Math.pow(smoothingRadius, 2))};

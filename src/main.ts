@@ -2,8 +2,10 @@ import {WGPURenderer} from "./wgpu/render/renderer.ts"
 import { WGPUComputer } from "./wgpu/compute/computer.ts"
 import { Scene } from "./scene/scene.ts";
 import { mat4 } from "wgpu-matrix";
-import { sideLength, logInstanceData } from "./wgpu/common.ts";
+import { workgroupSize } from "./wgpu/common.ts";
 
+
+const particleCount = 1024 * workgroupSize; // must be multiple of workgroupSize
 const scene = new Scene();
 
 let lastTime = Date.now();
@@ -32,7 +34,7 @@ function render(renderer: WGPURenderer, computer: WGPUComputer) {
     1000.0
   );
 
-  computer.run(deltaTime);
+  computer.run(Math.min(deltaTime, 0.1));
   renderer.render(mat4.multiply(projMatrix, scene.viewMatrix));
   requestAnimationFrame(() => render(renderer, computer));
 }
@@ -44,9 +46,9 @@ async function main() {
   if (!success) 
     return;
 
-  const { instanceCount, instanceData } = scene.createInitialInstanceData(sideLength);
-  renderer.createBuffersAndPipeline(instanceCount);
-  const computer = new WGPUComputer(renderer.device, instanceCount, instanceData, renderer.instanceBuffer);
+  const particleData = scene.createInitialParticleData(particleCount);
+  renderer.createBuffersAndPipeline(particleCount);
+  const computer = new WGPUComputer(renderer.device, particleCount, particleData, renderer.instanceBuffer);
 
   
 

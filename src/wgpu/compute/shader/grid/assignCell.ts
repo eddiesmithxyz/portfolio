@@ -1,5 +1,4 @@
-import { sideLength } from "../../../common"
-import { shaderInputLayoutSrc } from "../inputLayout";
+import { shaderInputLayoutSrc, mainFunc, getID } from "../shaderLayout";
 import { gridAccessFuncs } from "./gridAccess"
 
 
@@ -16,11 +15,8 @@ ${shaderInputLayoutSrc}
 ${gridAccessFuncs}
 
 
-@compute @workgroup_size(1, ${sideLength}, ${sideLength}) fn update(
-  @builtin(workgroup_id) workgroup_id : vec3<u32>,
-  @builtin(local_invocation_id) local_invocation_id : vec3<u32>
-) {
-  let id = workgroup_id.x * ${sideLength * sideLength} + local_invocation_id.y * ${sideLength} + local_invocation_id.z;
+${mainFunc} {
+  let id = ${getID};
 
   var position = particles[id].position.xyz;
   position += bounds * 0.5; // offset so grid bounding box applies from [-0.5*bound, +0.5*bound]

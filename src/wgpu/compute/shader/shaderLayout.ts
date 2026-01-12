@@ -17,6 +17,7 @@ ${particleStruct}
 struct Uniforms {
   deltaTime: f32,
   animSpeed: f32,
+  particleCount: u32,
 }
 @group(0) @binding(1) var<uniform> uniforms: Uniforms;
 
@@ -24,3 +25,16 @@ struct Uniforms {
 @group(0) @binding(4) var<storage, read_write> cellOffsets: array<u32>;
 
 `;
+
+
+import { workgroupSize } from "../../common";
+
+// main function dispatch size/id gen for shaders iterating over each particle once
+export const mainFunc = /* wgsl */`
+@compute @workgroup_size(${workgroupSize}, 1, 1) fn update(
+  @builtin(workgroup_id) workgroup_id : vec3<u32>,
+  @builtin(local_invocation_id) local_invocation_id : vec3<u32>
+)
+`;
+
+export const getID = /* wgsl */`workgroup_id.x * ${workgroupSize} + local_invocation_id.x`;

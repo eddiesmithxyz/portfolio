@@ -1,4 +1,4 @@
-import { wgslNumStr as str, wgslVec3Str as strV, wgslIVec3Str as strIntV, particleCount } from "../../../common"
+import { wgslNumStr as str, wgslVec3Str as strV, wgslIVec3Str as strIntV } from "../../../common"
 import { vec3 } from "wgpu-matrix"
 
 
@@ -6,13 +6,13 @@ export const smoothingRadius = 0.5; // SPH smoothing radius, also defines the gr
 
 // unit size of spatial grid. this is centred around 0, so will span [-0.5*bound, +0.5*bound]
 // points outside the bounds will be modulo'd 
-const bound = vec3.create(100, 40, 20); 
+const bound = vec3.create(300, 100, 50); 
 
 export const gridSize = vec3.floor(vec3.divScalar(bound, smoothingRadius));
 export const trueBound = vec3.mulScalar(gridSize, smoothingRadius); // reduce bound to nearest multiple of smoothingRadius
 
 
-// console.log(strIntV(gridSize));
+console.log(strIntV(gridSize));
 // console.log(strV(trueBound));
 
 
@@ -78,7 +78,7 @@ for (var i: i32 = -1; i <= 1; i++) {
       var neighbourIterator = cellOffsets[neighbourCellIndex];
 
       // iterate over particles in the neighbour cell
-      while (neighbourIterator != 0xffffffff && neighbourIterator < ${particleCount}) {
+      while (neighbourIterator != 0xffffffff && neighbourIterator < uniforms.particleCount) {
         let particleBIndex = particleIds[neighbourIterator]; 
         let particleB = particles[particleBIndex];
 

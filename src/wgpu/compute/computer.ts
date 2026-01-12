@@ -1,6 +1,6 @@
 // https://wickedengine.net/2018/05/scalabe-gpu-fluid-simulation/comment-page-1/
 
-import { instanceDataLength, logInstanceData, sideLength } from "../common";
+import { instanceDataLength, logInstanceData, workgroupSize } from "../common";
 import { gridSize } from "./shader/grid/gridAccess";
 
 import { assignCellShaderSrc } from "./shader/grid/assignCell";
@@ -14,7 +14,6 @@ import { RadixSortKernel } from 'webgpu-radix-sort';
 /* 
 TODO
 
-improve workgroup size/count 
 use ping pong buffering to improve performance - each shader reads from one buffer and writes to another
 once cells have been sorted, we can create a new array of particles in cell order. 
   this will remove lookup delays and also should improve cache locality 
@@ -31,7 +30,7 @@ export class WGPUComputer {
   private pipelines: GPUComputePipeline[] = [];
   private bindGroup: GPUBindGroup;
   
-  private instanceCount: number;
+  private particleCount: number;
   private particleDataBuffer: GPUBuffer;
   private renderInstanceBuffer: GPUBuffer;
 
@@ -48,18 +47,19 @@ export class WGPUComputer {
 
 
   // could auto-generate this list from the shader code but not necessary for a small number
-  private uniforms = new Map<string, {length: number, value: number[]}>([
-    ["deltaTime",       {length: 1, value: [0]}],
-    ["animSpeed",       {length: 1, value: [0]}],
+  private uniforms = new Map<string, {length: number, value: Float32Array | Uint32Array}>([
+    ["deltaTime",       {length: 1, value: new Float32Array([0])}],
+    ["animSpeed",       {length: 1, value: new Float32Array([0])}],
+    ["particleCount",   {length: 1, value: new Uint32Array([0])}],
   ]);
   private uniformsLength = Array.from(this.uniforms.values()).reduce((acc, u) => acc + u.length, 0);
 
   private resultBuffer: GPUBuffer; // for debug
 
 
-  constructor(device: GPUDevice, instanceCount: number, initialInstanceData: Float32Array<ArrayBuffer>, renderInstanceBuffer: GPUBuffer) {
+  constructor(device: GPUDevice, particleCount: number, initialInstanceData: Float32Array<ArrayBuffer>, renderInstanceBuffer: GPUBuffer) {
     this.device = device;
-    this.instanceCount = instanceCount;
+    this.particleCount = particleCount;
     this.renderInstanceBuffer = renderInstanceBuffer;
 
     
@@ -117,17 +117,17 @@ export class WGPUComputer {
     // BUFFERS
 
     this.particleDataBuffer = device.createBuffer({
-      size: instanceCount * 4 * instanceDataLength,
+      size: particleCount * 4 * instanceDataLength,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     });
     device.queue.writeBuffer(this.particleDataBuffer, 0, initialInstanceData)
 
     this.cellIndexBuffer = device.createBuffer({
-      size: instanceCount * 4,
+      size: particleCount * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     })
     this.particleIdBuffer = device.createBuffer({
-      size: instanceCount * 4,
+      size: particleCount * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     })
 
@@ -176,7 +176,7 @@ export class WGPUComputer {
       device: this.device,
       keys: this.cellIndexBuffer,
       values: this.particleIdBuffer,
-      count: this.instanceCount,
+      count: this.particleCount,
       check_order: false, 
       bit_count: 32,
       workgroup_size: { x: 16, y: 16 },  // Workgroup size in x and y dimensions. (x * y) must be a power of two
@@ -190,6 +190,7 @@ export class WGPUComputer {
     // update uniforms
     this.uniforms.get("deltaTime")!.value[0] = deltaTime;
     this.uniforms.get("animSpeed")!.value[0] = window.PAUSE_UPDATE ? 0 : 1;
+    this.uniforms.get("particleCount")!.value[0] = this.particleCount;
 
     // write uniforms
     const uniformData = new Float32Array(this.uniformsLength);
@@ -210,7 +211,7 @@ export class WGPUComputer {
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, this.bindGroup);
-      pass.dispatchWorkgroups(sideLength, 1, 1);
+      pass.dispatchWorkgroups(this.particleCount / workgroupSize, 1, 1);
       pass.end();
     }
     

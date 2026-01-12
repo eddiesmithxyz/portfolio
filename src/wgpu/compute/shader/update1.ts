@@ -1,19 +1,26 @@
-import { updateTemplate, numberedShaderLog } from "./updateTemplate"
-// import { iterateNeighbours } from "./grid/gridAccess";
+import { shaderInputLayoutSrc, mainFunc, getID } from "./shaderLayout";
+import { gridAccessFuncs } from "./grid/gridAccess";
+import { sphSrc } from "./physics/sph";
+
 
 // compute densities
 
 
-const update1body = /* wgsl */`
+export const update1Src = /* wgsl */`
 
-let density = particleDensity(particle);
-particles[id].density = density;
+${shaderInputLayoutSrc}
+${gridAccessFuncs}
+${sphSrc}
 
 
+${mainFunc} {
+  let id = ${getID};
 
+  let density = particleDensity(particles[id]);
+  particles[id].density = density;
+}
 
 `;
-export const update1Src = updateTemplate(update1body);
 
 
 // // testing neighbours
