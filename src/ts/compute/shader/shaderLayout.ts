@@ -2,6 +2,7 @@ export const particleStruct = /* wgsl */`
 struct Particle {
   position: vec4<f32>, // xyz used
   velocity: vec4<f32>, // xyz used
+  normal: vec4<f32>,
   lastDist: f32,
   density: f32,
   cellIndex: u32,

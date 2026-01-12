@@ -57,7 +57,13 @@ export class Scene {
       // velocity = vec3.add(velocity, vec3.create(0, -20, 0))
       velocity = vec3.add(velocity, vec3.create(0, 0, 0));
 
-      particleData.set([pos[0], pos[1], pos[2], 1, velocity[0], velocity[1], velocity[2], 1, 0, 0, 0, 0], i * instanceDataLength);
+      const normal = vec3.create(0, 1, 0);
+
+      particleData.set([
+        pos[0], pos[1], pos[2], 1, 
+        velocity[0], velocity[1], velocity[2], 1, 
+        normal[0], normal[1], normal[2], 1,
+        0, 0, 0, 0], i * instanceDataLength);
       
     }
     // logInstanceData(particleData);

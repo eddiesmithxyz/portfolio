@@ -24,33 +24,29 @@ ${mainFunc} {
   var velocity = particle.velocity.xyz;
 
 
-
+  // field gravity
   let fieldDist = sdf(position);
-  var acceleration = gravityAccel(position, fieldDist, particle.lastDist);
+  let fieldNormal = sdfNormal(position);
+  var acceleration = gravityAccel(position, fieldDist, fieldNormal, particle.lastDist);
   particles[id].lastDist = fieldDist;
 
-
-  // const bound = 4.0;
-  // const yBound = 4.0;
-  // if (position.x >  bound) { position.x =  bound; velocity.x *= -1.0; }
-  // if (position.x < -bound) { position.x = -bound; velocity.x *= -1.0; }
-  // if (position.z >  bound) { position.z =  bound; velocity.z *= -1.0; }
-  // if (position.z < -bound) { position.z = -bound; velocity.z *= -1.0; }
-  // if (position.y >  bound) { position.y =  bound; velocity.y *= -1.0; }
-  // if (position.y < -yBound) { position.y = -yBound; velocity.y *= -0.2; acceleration.y = 0.0; }
-
-
+  // fluid force
   acceleration += fluidAccel(particle, id);
 
+  // apply forces
   velocity += acceleration * accelDeltaTime;
   position += velocity * uniforms.deltaTime * uniforms.animSpeed;
+
+
+  // particle normal - move towards field normal
+  const lerpSpeed = 0.1;
+  let newNormal = normalize(lerpSpeed*fieldNormal + (1.0-lerpSpeed)*particle.normal.xyz);
+  particles[id].normal = vec4<f32>(newNormal, 1.0);
 
 
 
 
   particles[id].position = vec4<f32>(position.xyz, 1.0);
   particles[id].velocity = vec4<f32>(velocity.xyz, 1.0);
-
-  // particles[id].position = vec4<f32>(-21.3, -84.1, -0.1, 1.0);
 }
 `;

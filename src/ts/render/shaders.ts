@@ -18,7 +18,8 @@ struct VertexInput {
 
 struct InstanceInput {
   @location(2) position : vec4f,
-  @location(3) velocity : vec4f
+  @location(3) velocity : vec4f,
+  @location(4) normal : vec4f,
 }
 
 
@@ -28,16 +29,26 @@ fn vertex_main(
   instance: InstanceInput
 ) -> VertexOut {
   var output : VertexOut;
-
-  const particleSize = 0.003;
-
   output.position = uniforms.viewProjectionMatrix * instance.position;
-  let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize) * output.position.w;
+
+  // SCREEN SPACE SIZE PARTICLES (zoom invariant)
+  // const particleSize = 0.003;
+  // let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize) * output.position.w;
+
+  // WORLD SPACE SIZE PARTICLES
+  const particleSize = 0.15;
+  let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize);
+  
+
   output.position += vec4f(vertPos, 0., 0.);
 
-  var baseColor = vec4f(0.8, 0.8, 0.8, 1.0);
+  const baseColor = vec4f(0.7, 0.7, 0.8, 1.0);
+
+  const lightDir = normalize(vec3<f32>(1.0, 1.0, 1.0));
+  var intensity = 0.45*dot(lightDir, instance.normal.xyz) + 0.55;
+  // var distanceScalar = 0.5 + 0.5*smoothstep(-5,);
   
-  output.colour = baseColor;
+  output.colour = intensity*baseColor;
   output.uv = vertex.uv;
 
   return output;

@@ -12,7 +12,7 @@ export const gridSize = vec3.floor(vec3.divScalar(bound, smoothingRadius));
 export const trueBound = vec3.mulScalar(gridSize, smoothingRadius); // reduce bound to nearest multiple of smoothingRadius
 
 
-console.log(strIntV(gridSize));
+// console.log(strIntV(gridSize));
 // console.log(strV(trueBound));
 
 

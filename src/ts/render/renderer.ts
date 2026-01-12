@@ -18,8 +18,10 @@ export class WGPURenderer {
   private bindGroup: GPUBindGroup = {} as GPUBindGroup;
 
   private depthTexture: GPUTexture | null = null;
+  private multisampleTexture: GPUTexture | null = null;
 
   public clearColour = { r: 0.1, g: 0.1, b: 0.1, a: 1 };
+  public multisampleCount = 4;
   
   async init(): Promise<boolean> {
     if (!navigator.gpu) {
@@ -32,11 +34,7 @@ export class WGPURenderer {
     }
 
 
-    this.device = await adapter.requestDevice({
-      requiredLimits: {
-        maxComputeInvocationsPerWorkgroup: 1024
-      }
-    });
+    this.device = await adapter.requestDevice();
 
     const canvas = document.querySelector("#gpuCanvas") as HTMLCanvasElement;
     this.ctx = canvas.getContext("webgpu") as GPUCanvasContext;
@@ -89,7 +87,7 @@ export class WGPURenderer {
             offset: 16,
             format: "float32x4"
           },
-          { // last dist
+          { // normal
             shaderLocation: 4,
             offset: 32,
             format: "float32x4"
@@ -125,9 +123,9 @@ export class WGPURenderer {
         format: 'depth24plus',
       },
       layout: "auto",
-      // multisample: {
-      //   count: 4,
-      // },
+      multisample: {
+        count: this.multisampleCount,
+      },
     });
 
 
@@ -148,7 +146,7 @@ export class WGPURenderer {
     const uniformSize =
       16 * 4 +  // view-proj matrix
        1 * 4 +  // aspect ratio
-      15 * 4;   // padding (required by webgpu)
+       3 * 4;   // padding (required by webgpu)
     this.uniformBuffer = this.device.createBuffer({
       size: uniformSize,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -182,6 +180,25 @@ export class WGPURenderer {
         size: canvasTexture,  // canvasTexture has width, height, and depthOrArrayLayers properties
         format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        sampleCount: this.multisampleCount,
+      });
+    }
+
+    // If the multisample texture doesn't exist or
+    // is the wrong size then make a new one.
+    if (!this.multisampleTexture ||
+        this.multisampleTexture.width !== canvasTexture.width ||
+        this.multisampleTexture.height !== canvasTexture.height) {
+ 
+      if (this.multisampleTexture) this.multisampleTexture.destroy();
+ 
+      // Create a new multisample texture that matches our
+      // canvas's size
+      this.multisampleTexture = this.device.createTexture({
+        format: canvasTexture.format,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        size: [canvasTexture.width, canvasTexture.height],
+        sampleCount: this.multisampleCount,
       });
     }
 
@@ -193,7 +210,8 @@ export class WGPURenderer {
           clearValue: this.clearColour,
           loadOp: "clear",
           storeOp: "store",
-          view: canvasTexture.createView()
+          view: this.multisampleTexture.createView(),
+          resolveTarget: canvasTexture.createView()
         }
       ],
       depthStencilAttachment: {

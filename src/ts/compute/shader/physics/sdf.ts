@@ -8,7 +8,7 @@ const gravityClamp = str(200); // limit gravity
 
 export const sdfSrc = /* wgsl */`
 
-const internalForceMultiplier = 0.2;
+const internalForceMultiplier = 1.0; // scale the force when particle is inside field (currently not working i think)
 
 fn sdCapsule(p: vec3<f32>, a: vec3<f32>, b: vec3<f32>, r: f32) -> f32 {
     let pa = p - a;
@@ -117,12 +117,12 @@ fn sdfNormal(pos: vec3<f32>) -> vec3<f32> {
 }
 
 const gravityClamp = ${gravityClamp};
-fn gravityAccel(pos: vec3<f32>, dist: f32, lastDist: f32) -> vec3<f32> {
+fn gravityAccel(pos: vec3<f32>, dist: f32, fieldNormal: vec3<f32>, lastDist: f32) -> vec3<f32> {
   let dDistdt = (dist - lastDist) / uniforms.deltaTime;
   var gravityAmount = -${positionStiffness}*dist - ${velocityDamping}*dDistdt;
   gravityAmount = atan(gravityAmount / gravityClamp) * gravityClamp;
 
-  var gravity = -sdfNormal(pos) * gravityAmount;
+  var gravity = -fieldNormal * gravityAmount;
   if (dist < 0.0) {
     gravity *= internalForceMultiplier;
   }
