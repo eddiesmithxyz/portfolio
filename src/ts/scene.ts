@@ -42,15 +42,14 @@ export class Scene {
 
       let pos = vec3.create(Math.random(), Math.random(), Math.random());
       pos = vec3.sub(pos, vec3.create(0.5, 0.5, 0.5)); // 1x1 cube centred at origin
-
-      pos = vec3.multiply(pos, vec3.create(20, 100, 20));
+      pos = vec3.multiply(pos, vec3.create(20, 50, 20));
 
       const letterX = [-2.05, -1.05, 0, 1, 2].map(x => x*40);
       const letter = Math.floor(Math.random() * letterX.length);
 
 
       const side = Math.random() > 0.5 ? 1: -1;
-      pos = vec3.add(pos, vec3.create(letterX[letter], 110 * side, 0));
+      pos = vec3.add(pos, vec3.create(letterX[letter], 80 * side, 0));
 
       
       // pos = vec3.scale(pos, 7);

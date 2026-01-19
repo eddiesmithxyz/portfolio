@@ -33,6 +33,9 @@ ${mainFunc} {
   let fieldDist = sdf(position);
   let fieldNormal = sdfNormal(position);
   acceleration += gravityAccel(position, fieldDist, fieldNormal, particle.lastDist);
+
+  // group move to top/bottom
+  acceleration += vec3<f32>(0.0, -3.0*particle.group, 0.0);
   
   // apply forces
   velocity += acceleration * accelDeltaTime;

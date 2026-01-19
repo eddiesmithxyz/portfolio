@@ -47,9 +47,9 @@ fn vertex_main(
 
   output.position += vec4f(vertPos, 0., 0.);
 
-  const baseColor1 = vec4f(0.7, 0.3, 0.8, 1.0);
-  const baseColor2 = vec4f(0.3, 0.7, 0.8, 1.0);
-  var colour = select(baseColor1, baseColor2, instance.group > 0);
+  const baseColor1 = vec4f(0.3, 0.7, 0.8, 1.0);
+  const baseColor2 = vec4f(0.0, 0.3, 0.8, 1.0);
+  var colour = mix(baseColor1, baseColor2, 0.5*instance.group + 0.5);
 
   // // SHADE COLLISIONS
   // const densityRange = 0.1; // density scalar will vary for density values in range [1, 1+densityRange]
@@ -62,10 +62,9 @@ fn vertex_main(
   colour *= lightIntensity;
 
 
-  // hide particles when they're coming in
+  // fade particles in at the start
   const startFadeY = 40;
   const endFadeY = 20;
-
   let fadeFac = saturate((abs(instance.position.y)-startFadeY)/(endFadeY-startFadeY));
   colour = mix(uniforms.backgroundColour, colour, fadeFac);
 

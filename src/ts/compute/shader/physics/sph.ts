@@ -64,8 +64,8 @@ fn fluidAccel(particle: Particle, id: u32) -> vec3<f32> {
 
   let pressureA = particlePressure(particle.density);
 
-  var sameGroupNeighbourPosSum = vec4<f32>(0.0, 0.0, 0.0, 0.01); // z component stores count
-  var diffGroupNeighbourPosSum = vec4<f32>(0.0, 0.0, 0.0, 0.01);
+  var groupNeighbourPosSum = vec3<f32>(0.0);
+  var neighbourCount = 0.01;
   
   ${iterateNeighbours(/* wgsl */`
     if (particleBIndex != id) {
@@ -93,17 +93,20 @@ fn fluidAccel(particle: Particle, id: u32) -> vec3<f32> {
 
 
         // GROUP COHESION
-        sameGroupNeighbourPosSum += select(vec4<f32>(particleB.position.xyz, 1.0), vec4<f32>(0.0), groupDist > 0.5);
-        diffGroupNeighbourPosSum += select(vec4<f32>(particleB.position.xyz, 1.0), vec4<f32>(0.0), groupDist < 0.5);
+        // move towards particles of same group
+        groupNeighbourPosSum += (1.0-groupDist) * particleB.position.xyz; 
+        neighbourCount += 1.0-groupDist;
+        
       }
     }
   `)}
 
   var force = (e*viscosityForce - pressureForce) / particle.density;
 
-  let sameGroupCentroidDir = (sameGroupNeighbourPosSum.xyz / sameGroupNeighbourPosSum.w) - particle.position.xyz;
-  let diffGroupCentroidDir = (diffGroupNeighbourPosSum.xyz / diffGroupNeighbourPosSum.w) - particle.position.xyz;
-  force += 0.3* sameGroupCentroidDir - 0.0*diffGroupCentroidDir;
+  // let sameGroupCentroidDir = (sameGroupNeighbourPosSum.xyz / sameGroupNeighbourPosSum.w) - particle.position.xyz;
+  // let diffGroupCentroidDir = (diffGroupNeighbourPosSum.xyz / diffGroupNeighbourPosSum.w) - particle.position.xyz;
+  // force += 0.3* sameGroupCentroidDir - 0.0*diffGroupCentroidDir;
+  force += 0.3 * (groupNeighbourPosSum / neighbourCount - particle.position.xyz);
 
   return force / particleFluidMass;
 }

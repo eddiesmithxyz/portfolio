@@ -101,6 +101,8 @@ fn sdDistort(pos: vec3<f32>) -> f32 {
     // return max((sin(period*abs(pos.y) + uniforms.time)-sharpness)/(1.0-sharpness), 0.0);
 
 
+    // MOUSE INTERACTION
+
     // find closest point on line between mouseIntersection and lastMouseIntersection
     let p1 = uniforms.mouseIntersection;
     let p2 = uniforms.lastMouseIntersection;  
