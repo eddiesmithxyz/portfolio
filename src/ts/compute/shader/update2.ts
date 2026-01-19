@@ -14,12 +14,12 @@ ${sphSrc}
 ${sdfSrc}
 
 const accelDeltaTime = 0.01; // hardcoded deltaTime for acceleration calculation to prevent explosion
-const velocityClamp = 50.0;
+const velocityClamp = 100.0;
 
 
 ${mainFunc} {
   let id = ${getID};
-  let particle = particles[id];
+  let particle = particles0[id];
 
   var position = particle.position.xyz;
   var velocity = particle.velocity.xyz;
@@ -40,21 +40,23 @@ ${mainFunc} {
 
   position += velocity * uniforms.deltaTime * uniforms.animSpeed;
 
-
-
-
   
-  particles[id].lastDist = fieldDist;
-
-
-
-  particles[id].position = vec4<f32>(position.xyz, 1.0);
-  particles[id].velocity = vec4<f32>(velocity.xyz, 1.0);
   
   // particle normal (shading only) - move towards field normal
   const lerpSpeed = 0.1;
-  let newNormal = normalize(lerpSpeed*fieldNormal + (1.0-lerpSpeed)*particle.normal.xyz);
-  particles[id].normal = vec4<f32>(newNormal, 1.0);
+  let normal = normalize(lerpSpeed*fieldNormal + (1.0-lerpSpeed)*particle.normal.xyz);
+
+
+  
+  particles1[id] = Particle(
+    vec4<f32>(position, 1.0),
+    vec4<f32>(velocity, 1.0),
+    vec4<f32>(normal, 1.0),
+    fieldDist,
+    particle.density,
+    particle.cellIndex, // not really necessary
+    particle.group
+  );
 
 }
 `;

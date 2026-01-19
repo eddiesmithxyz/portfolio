@@ -40,10 +40,10 @@ export class Scene {
       let pos = vec3.create(Math.random(), Math.random(), Math.random());
       pos = vec3.sub(pos, vec3.create(0.5, 0.5, 0.5)); // 1x1 cube centred at origin
 
-      pos = vec3.multiply(pos, vec3.create(200, 10, 10));
+      pos = vec3.multiply(pos, vec3.create(180, 20, 5));
 
       const side = Math.random() > 0.5 ? 1: -1;
-      pos = vec3.add(pos, vec3.create(0, 40 * side, 0));
+      pos = vec3.add(pos, vec3.create(0, 40 * side + 0, 0));
 
       
       // pos = vec3.scale(pos, 7);
@@ -56,9 +56,8 @@ export class Scene {
 
       // random velocity
       const startMaxSpeed = 20.0;
-      let velocity = vec3.create((Math.random()-0.5) * startMaxSpeed, (Math.random()-0.5) * startMaxSpeed, (Math.random()-0.5) * startMaxSpeed);
-      // velocity = vec3.add(velocity, vec3.create(0, -20, 0))
-      velocity = vec3.add(velocity, vec3.create(0, 0, 0));
+      // let velocity = vec3.create((Math.random()-0.5) * startMaxSpeed, (Math.random()-0.5) * startMaxSpeed, (Math.random()-0.5) * startMaxSpeed);
+      let velocity = vec3.create(0, -20, 0);
 
       const normal = vec3.create(0, 1, 0);
 
@@ -76,7 +75,7 @@ export class Scene {
 
 
   update(canvas: HTMLCanvasElement) {
-    console.log(this.mouseCoord);
+    // console.log(this.mouseCoord);
     if (this.mouseDown) {
       const deltaMouse = vec2.subtract(this.mouseCoord, this.lastMouseCoord);
       this.viewAngles[0] += deltaMouse[0] * 1.5;

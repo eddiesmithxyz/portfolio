@@ -13,17 +13,18 @@ struct Particle {
 
 export const shaderInputLayoutSrc = /* wgsl */`
 ${particleStruct}
-@group(0) @binding(0) var<storage, read_write> particles: array<Particle>;
+@group(0) @binding(0) var<storage, read_write> particles0: array<Particle>;
+@group(0) @binding(1) var<storage, read_write> particles1: array<Particle>;
 
 struct Uniforms {
   deltaTime: f32,
   animSpeed: f32,
   particleCount: u32,
 }
-@group(0) @binding(1) var<uniform> uniforms: Uniforms;
-
-@group(0) @binding(3) var<storage, read_write> particleIds: array<u32>;
-@group(0) @binding(4) var<storage, read_write> cellOffsets: array<u32>;
+@group(0) @binding(2) var<uniform> uniforms: Uniforms;
+@group(0) @binding(3) var<storage, read_write> cellIds: array<u32>;
+@group(0) @binding(4) var<storage, read_write> particleIds: array<u32>;
+@group(0) @binding(5) var<storage, read_write> cellOffsets: array<u32>;
 
 `;
 

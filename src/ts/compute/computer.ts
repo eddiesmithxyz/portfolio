@@ -31,7 +31,9 @@ export class WGPUComputer {
   private bindGroup: GPUBindGroup;
   
   private particleCount: number;
-  private particleDataBuffer: GPUBuffer;
+  private particleDataBuffer0: GPUBuffer; // used as read/write for all but the final shader. used as read for final shader
+  private particleDataBuffer1: GPUBuffer; // used as write for final shader (to avoid race conditions)
+
   private renderInstanceBuffer: GPUBuffer;
 
   // particles are given in a tuple (cellIndex, particleIndex in particleDataBuffer)
@@ -73,12 +75,12 @@ export class WGPUComputer {
         {
           binding: 1,
           visibility: GPUShaderStage.COMPUTE,
-          buffer: { type: "uniform" },
+          buffer: { type: "storage" },
         },
         {
           binding: 2,
           visibility: GPUShaderStage.COMPUTE,
-          buffer: { type: "storage" },
+          buffer: { type: "uniform" },
         },
         {
           binding: 3,
@@ -87,6 +89,11 @@ export class WGPUComputer {
         },
         {
           binding: 4,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type: "storage" },
+        },
+        {
+          binding: 5,
           visibility: GPUShaderStage.COMPUTE,
           buffer: { type: "storage" },
         },
@@ -116,11 +123,15 @@ export class WGPUComputer {
     
     // BUFFERS
 
-    this.particleDataBuffer = device.createBuffer({
+    this.particleDataBuffer0 = device.createBuffer({
       size: particleCount * 4 * instanceDataLength,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     });
-    device.queue.writeBuffer(this.particleDataBuffer, 0, initialInstanceData)
+    this.particleDataBuffer1 = device.createBuffer({
+      size: particleCount * 4 * instanceDataLength,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    });
+    device.queue.writeBuffer(this.particleDataBuffer0, 0, initialInstanceData)
 
     this.cellIndexBuffer = device.createBuffer({
       size: particleCount * 4,
@@ -151,7 +162,7 @@ export class WGPUComputer {
     });
 
     this.resultBuffer = device.createBuffer({
-      size: this.particleDataBuffer.size,
+      size: this.particleDataBuffer0.size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
     });
     
@@ -161,11 +172,12 @@ export class WGPUComputer {
     this.bindGroup = device.createBindGroup({
       layout: bindGroupLayout,
       entries: [
-        { binding: 0, resource: { buffer: this.particleDataBuffer }},
-        { binding: 1, resource: { buffer: this.uniformBuffer }},
-        { binding: 2, resource: { buffer: this.cellIndexBuffer }},
-        { binding: 3, resource: { buffer: this.particleIdBuffer }},
-        { binding: 4, resource: { buffer: this.cellOffsetBuffer }}
+        { binding: 0, resource: { buffer: this.particleDataBuffer0 }},
+        { binding: 1, resource: { buffer: this.particleDataBuffer1 }},
+        { binding: 2, resource: { buffer: this.uniformBuffer }},
+        { binding: 3, resource: { buffer: this.cellIndexBuffer }},
+        { binding: 4, resource: { buffer: this.particleIdBuffer }},
+        { binding: 5, resource: { buffer: this.cellOffsetBuffer }}
       ],
     })
   }
@@ -221,13 +233,13 @@ export class WGPUComputer {
     runPipeline(this.pipelines[2]); // physics update 1
     runPipeline(this.pipelines[3]); // physics update 2
 
-
-    encoder.copyBufferToBuffer(this.particleDataBuffer, 0, this.renderInstanceBuffer, 0);
+    encoder.copyBufferToBuffer(this.particleDataBuffer1, this.particleDataBuffer0);
+    encoder.copyBufferToBuffer(this.particleDataBuffer1, 0, this.renderInstanceBuffer, 0);
 
     const debugBuffer = 
       window.DEBUG_BUF === 3 ? this.cellOffsetBuffer : (
       window.DEBUG_BUF === 2 ? this.particleIdBuffer : (
-      window.DEBUG_BUF === 1 ? this.cellIndexBuffer : this.particleDataBuffer))
+      window.DEBUG_BUF === 1 ? this.cellIndexBuffer : this.particleDataBuffer0))
     encoder.copyBufferToBuffer(debugBuffer, 0, this.resultBuffer, 0);
 
     const commandBuffer = encoder.finish();

@@ -16,16 +16,7 @@ ${sphSrc}
 ${mainFunc} {
   let id = ${getID};
 
-  let density = particleDensity(particles[id]);
-  particles[id].density = density;
+  particles0[id].density = particleDensity(particles0[id]);
 }
 
 `;
-
-
-// // testing neighbours
-// var neighbourCellIdSum: u32 = 0;
-// ${iterateNeighbours(/* wgsl */`
-//   neighbourCellIdSum += particleB.cellIndex;
-// `)}
-// particles[id]._pad = neighbourCellIdSum;

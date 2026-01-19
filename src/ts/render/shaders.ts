@@ -40,7 +40,7 @@ fn vertex_main(
   // let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize) * output.position.w;
 
   // WORLD SPACE SIZE PARTICLES
-  const particleSize = 0.4;
+  const particleSize = 0.5;
   let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize);
   
 

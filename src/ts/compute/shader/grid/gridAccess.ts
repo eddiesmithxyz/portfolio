@@ -63,14 +63,12 @@ export const iterateNeighbours = (body: string) => /* wgsl */`
 // requires including gridAccessFuncs
 // assumes "particle" is defined as the particle we are finding neighbours of
 // loops over all "particleB" in this cell and neighbour cells
+// uses the sorted spatial grid we have created
 
 let particleCellIndex3d = getCellId3d(particle.cellIndex);
 for (var i: i32 = -1; i <= 1; i++) {
   for (var j: i32 = -1; j <= 1; j++) {
     for (var k: i32 = -1; k <= 1; k++) {
-// for (var i: i32 = 0; i <= 0; i++) {
-//   for (var j: i32 = 0; j <= 0; j++) {
-//     for (var k: i32 = -1; k <= 1; k++) {
       let neighbourIndex3d = particleCellIndex3d + vec3<i32>(i, j, k);
       let neighbourCellIndex = getCellIdFlat(neighbourIndex3d);
 
@@ -80,7 +78,7 @@ for (var i: i32 = -1; i <= 1; i++) {
       // iterate over particles in the neighbour cell
       while (neighbourIterator != 0xffffffff && neighbourIterator < uniforms.particleCount) {
         let particleBIndex = particleIds[neighbourIterator]; 
-        let particleB = particles[particleBIndex];
+        let particleB = particles0[particleBIndex];
 
         if (particleB.cellIndex != neighbourCellIndex) {
           // we have iterated over all particles in the neighbour cell sublist
