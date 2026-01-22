@@ -651,7 +651,7 @@ fn vertex_main(
 
   // FADE PARTICLES IN AT THE START
   const startFadeY = 40;
-  const endFadeY = 20;
+  const endFadeY = 30;
   output.fadeFac = saturate((abs(instance.position.y)-startFadeY)/(endFadeY-startFadeY));
 
 
@@ -1142,7 +1142,7 @@ fn sdfWord(p: vec3<f32>) -> f32 {
   return sdfHi(p);
 }
 
-`;var xn=ee(.05),bn=ee(-.5),On=ee(-1),In=ee(200),Mn=ee(3),En=ee(20),Wt=`
+`;var xn=ee(.05),bn=ee(-1),On=ee(-1),In=ee(400),Mn=ee(3),En=ee(20),Wt=`
 ${Lt}
 
 
