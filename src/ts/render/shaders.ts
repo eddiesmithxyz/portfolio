@@ -85,7 +85,7 @@ fn vertex_main(
 
   // FADE PARTICLES IN AT THE START
   const startFadeY = 40;
-  const endFadeY = 20;
+  const endFadeY = 30;
   output.fadeFac = saturate((abs(instance.position.y)-startFadeY)/(endFadeY-startFadeY));
 
 
