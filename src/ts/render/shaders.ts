@@ -1,7 +1,7 @@
 import { wgslNumStr as str } from "../common"
 
 
-const particleSize = str(0.9);
+const particleSize = str(1.6);
 
 export const renderShaders = /* wgsl */`
 struct Uniforms {

@@ -16,7 +16,7 @@ fn sdD(p: vec3<f32>, r: f32) -> f32 {
         vec3<f32>(-0.3,  0.5, 0.0),
         vec3<f32>(-0.1,  0.5, 0.0), r);
 
-    let t1 = sdCappedTorus(
+    let t1 = sdCappedTorusRight(
         p - vec3<f32>(-0.1, 0.0, 0.0),
         vec2<f32>(1.0, 0.0),
         0.5, r
@@ -93,6 +93,62 @@ fn sdI(p: vec3<f32>, r: f32) -> f32 {
     return min(c1, min(c2, c3));
 }
 
+fn sdh(p: vec3<f32>, r: f32) -> f32 {
+    let c1 = sdCapsule(
+        p,
+        vec3<f32>(-0.3,  0.5, 0.0),
+        vec3<f32>(-0.3, -0.5, 0.0),
+        r
+    );
+
+    let t1 = sdCappedTorusTop(
+        p - vec3<f32>(0.0, -0.25, 0.0),
+        vec2<f32>(1.0, 0.0),
+        0.3,
+        r
+    );
+
+    let c2 = sdCapsule(
+        p,
+        vec3<f32>( 0.3, -0.5, 0.0),
+        vec3<f32>( 0.3, -0.25, 0.0),
+        r
+    );
+
+    return min(c1, min(t1, c2));
+}
+
+fn sdi(p: vec3<f32>, r: f32) -> f32 {
+    let s1 = sdSphere(
+        p - vec3<f32>(0.0, 0.3, 0.0),
+        r
+    );
+
+    let c1 = sdCapsule(
+        p,
+        vec3<f32>(0.0, -0.5, 0.0),
+        vec3<f32>(0.0,  0.0, 0.0),
+        r
+    );
+
+    return min(s1, c1);
+}
+
+fn sdExclamation(p: vec3<f32>, r: f32) -> f32 {
+    let s1 = sdSphere(
+        p - vec3<f32>(0.0, -0.5, 0.0),
+        r
+    );
+
+    let c1 = sdCapsule(
+        p,
+        vec3<f32>(0.0,  0.5, 0.0),
+        vec3<f32>(0.0, -0.2, 0.0),
+        r
+    );
+
+    return min(s1, c1);
+}
 
 
 `;

@@ -4,6 +4,6 @@ import { createBuildSettings } from './settings.js';
 import { copyFiles } from './copy.js'
 copyFiles()
 
-const settings = createBuildSettings({ minify: true });
+const settings = createBuildSettings("src/index.ts", { minify: true });
 
 await esbuild.build(settings);

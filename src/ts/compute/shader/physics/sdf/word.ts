@@ -51,9 +51,30 @@ fn sdfHi(p: vec3<f32>) -> f32 {
 
 }
 
+fn sdhi(p: vec3<f32>) -> f32 {
+    // const r: f32 = 0.08;
+    const r: f32 = 0.05;
+    const scale: f32 = 60.0;
+    let pos = p / scale;
+
+    var minDist: f32 = 1e20;
+
+    // h
+    minDist = min(minDist, sdh(pos - vec3<f32>(-0.7, 0.0, 0.0), r) * scale);
+
+    // i
+    minDist = min(minDist, sdi(pos - vec3<f32>(0.0, 0.0, 0.0), r) * scale);
+
+    // !
+    minDist = min(minDist, sdExclamation(pos - vec3<f32>(0.5, 0.0, 0.0), r) * scale);
+
+    return minDist;
+
+}
+
 
 fn sdfWord(p: vec3<f32>) -> f32 { 
-  return sdfHi(p);
+  return sdfEddie(p);
 }
 
 `;

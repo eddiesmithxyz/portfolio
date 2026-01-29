@@ -23,7 +23,8 @@ export class WGPURenderer {
   private depthTexture: GPUTexture | null = null;
   private multisampleTexture: GPUTexture | null = null;
 
-  public clearColour = { r: 0.1, g: 0.1, b: 0.1, a: 1 };
+  private clearColourVal = 25/256;
+  public clearColour = { r: this.clearColourVal, g: this.clearColourVal, b: this.clearColourVal, a: 1 };
   public multisampleCount = 4;
   
   async init(): Promise<boolean> {

@@ -1,8 +1,8 @@
-import {WGPURenderer} from "./ts/render/renderer.ts"
-import { WGPUComputer } from "./ts/compute/computer.ts"
-import { Scene } from "./ts/scene.ts";
+import {WGPURenderer} from "./render/renderer.ts"
+import { WGPUComputer } from "./compute/computer.ts"
+import { Scene } from "./scene.ts";
 import { mat4 } from "wgpu-matrix";
-import { workgroupSize } from "./ts/common.ts";
+import { workgroupSize } from "./common.ts";
 
 
 const particleCount = 1600 * workgroupSize; // must be multiple of workgroupSize
@@ -35,7 +35,7 @@ function render(renderer: WGPURenderer, computer: WGPUComputer) {
 }
 
 
-async function main() {
+export async function runSim() {
   const renderer = new WGPURenderer();
   const success = await renderer.init()
   if (!success) 
@@ -64,5 +64,3 @@ async function main() {
   lastTime = Date.now();
   requestAnimationFrame(() => render(renderer, computer));
 }
-
-main()

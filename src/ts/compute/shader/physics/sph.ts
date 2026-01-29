@@ -94,7 +94,7 @@ fn fluidAccel(particle: Particle, id: u32) -> vec3<f32> {
 
         // PRESSURE FORCE
         let W1 = ${spikyConst} * pow(h-r, 2.0);
-        let pressureB = (1.0 + 10.0*groupDist) * particlePressure(particleB.density);
+        let pressureB = (1.0 + 5.0*groupDist) * particlePressure(particleB.density);
         pressureForce += W1 * rNorm * (pressureA + pressureB) / (2.0 * particle.density * particleB.density);
 
 
@@ -115,12 +115,17 @@ fn fluidAccel(particle: Particle, id: u32) -> vec3<f32> {
 
   var force = (e*viscosityForce - pressureForce) / particle.density;
 
+  
+  // group move to top/bottom
+  force += vec3<f32>(0.0, -1.0*particle.group * particle.density, 0.0);
+  
 
-  // group cohesion force (disabled)
+
+  // // group cohesion force (disabled)
   // // let sameGroupCentroidDir = (sameGroupNeighbourPosSum.xyz / sameGroupNeighbourPosSum.w) - particle.position.xyz;
   // // let diffGroupCentroidDir = (diffGroupNeighbourPosSum.xyz / diffGroupNeighbourPosSum.w) - particle.position.xyz;
   // // force += 0.3* sameGroupCentroidDir - 0.0*diffGroupCentroidDir;
-  // force += 1.0 * (groupNeighbourPosSum / neighbourCount - particle.position.xyz);
+  // force += 0.3 * (groupNeighbourPosSum / neighbourCount - particle.position.xyz);
 
   return force / particleFluidMass;
 }

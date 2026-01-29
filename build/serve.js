@@ -4,7 +4,9 @@ import { createBuildSettings } from './settings.js';
 import { copyFiles } from './copy.js'
 copyFiles()
 
-const settings = createBuildSettings({ 
+const settings = createBuildSettings(
+  "src/index.ts", 
+  { 
   sourcemap: true,
   banner: {
     js: `new EventSource('/esbuild').addEventListener('change', () => location.reload());`,
