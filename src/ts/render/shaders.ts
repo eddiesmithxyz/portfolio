@@ -1,15 +1,17 @@
 import { wgslNumStr as str } from "../common"
 
-
-const particleSize = str(1.6);
-
 export const renderShaders = /* wgsl */`
 struct Uniforms {
   viewProjectionMatrix : mat4x4<f32>,
   invVPMatrix : mat4x4<f32>,
-  backgroundColour: vec4<f32>,
   camPos: vec3<f32>,
   aspectRatio : f32,
+  
+  backgroundColour: vec4<f32>,
+  col1: vec4<f32>,
+  col2: vec4<f32>,
+  
+  particleSize: f32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
@@ -66,16 +68,13 @@ fn vertex_main(
   // let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize) * output.position.w;
 
   // WORLD SPACE SIZE PARTICLES
-  const particleSize = ${particleSize};
-  let vertPos = vertex.position.xy * vec2f(particleSize / uniforms.aspectRatio, particleSize);
+  let vertPos = vertex.position.xy * vec2f(uniforms.particleSize / uniforms.aspectRatio, uniforms.particleSize);
   
 
   output.position += vec4f(vertPos, 0., 0.);
   output.worldPos = (uniforms.invVPMatrix * output.position).xyz;
 
-  const baseColor1 = vec4f(0.3, 0.7, 0.8, 1.0);
-  const baseColor2 = vec4f(0.0, 0.3, 0.8, 1.0);
-  output.colour = mix(baseColor1, baseColor2, 0.5*instance.group + 0.5);
+  output.colour = mix(uniforms.col1, uniforms.col2, 0.5*instance.group + 0.5);
 
   // // SHADE COLLISIONS
   // const densityRange = 0.1; // density scalar will vary for density values in range [1, 1+densityRange]
@@ -84,8 +83,8 @@ fn vertex_main(
 
 
   // FADE PARTICLES IN AT THE START
-  const startFadeY = 40;
-  const endFadeY = 30;
+  const startFadeY = 30;
+  const endFadeY = 20;
   output.fadeFac = saturate((abs(instance.position.y)-startFadeY)/(endFadeY-startFadeY));
 
 

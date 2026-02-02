@@ -1,14 +1,15 @@
 import { mat4, vec4, vec3, vec2, type Vec3, type Mat4, type Vec2 } from 'wgpu-matrix';
-import { instanceDataLength, logInstanceData } from './common';
+import { instanceDataLength, logInstanceData, type SimParams } from './common';
 
 export class Scene {
-  private viewDistance: number = 84;
-  public camPos = vec3.create(0, 0, this.viewDistance);
-  public viewMatrix: Mat4 = mat4.lookAt(this.camPos, [0, 0, 0], [0, 1, 0]);
+  private viewDistance: number;
+  public camPos;
+  public viewMatrix: Mat4;
   public viewProjectionMatrix: Mat4 = mat4.identity();
   private viewAngles: Vec2 = vec2.create(0, 0);
 
 
+  public mouseOnCanvas = false;
   public mouseCoord = vec2.create(0, 0);
   private mouseDown = false;
   private lastMouseCoord = vec2.create(0, 0);
@@ -16,11 +17,13 @@ export class Scene {
   public mouseIntersection = vec3.create(0, 0, 0); // intersection of mouse ray with z=0 plane
   public lastMouseIntersection = vec3.create(0, 0, 0);
 
-  constructor() {
+  constructor(canvas: HTMLCanvasElement, params: Required<SimParams>) {
     window.addEventListener('mousemove', (event) => {
       const rect = (event.target as HTMLCanvasElement).getBoundingClientRect();
-      this.mouseCoord[0] = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      this.mouseCoord[1] = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+      if (this.mouseOnCanvas) {
+        this.mouseCoord[0] = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouseCoord[1] = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+      }
     });
     window.addEventListener('mousedown', (event) => {
       this.mouseDown = true;
@@ -28,11 +31,25 @@ export class Scene {
     window.addEventListener('mouseup', (event) => {
       this.mouseDown = false;
     });
-    window.addEventListener('wheel', (event) => {
-      // event.preventDefault();
-      this.viewDistance += 0.1 * this.viewDistance * ((event as WheelEvent).deltaY > 0 ? 1 : -1);
-      this.viewDistance = Math.max(5, Math.min(200, this.viewDistance));
-    });
+    canvas.addEventListener('mouseenter', (event) => {
+      this.mouseOnCanvas = true;
+    })
+    canvas.addEventListener('mouseleave', (event) => {
+      this.mouseOnCanvas = false;
+    })
+
+
+    if (params.allowScroll) {
+      window.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        this.viewDistance += 0.1 * this.viewDistance * ((event as WheelEvent).deltaY > 0 ? 1 : -1);
+        this.viewDistance = Math.max(5, Math.min(200, this.viewDistance));
+      });
+    }
+    
+    this.viewDistance = params.viewDist;
+    this.camPos = vec3.create(0, 0, this.viewDistance);
+    this.viewMatrix = mat4.lookAt(this.camPos, [0, 0, 0], [0, 1, 0]);
   }
 
   createInitialParticleData(particleCount: number): Float32Array<ArrayBuffer> {
@@ -124,10 +141,6 @@ export class Scene {
     
     this.lastMouseIntersection = this.mouseIntersection;
     this.mouseIntersection = vec3.add(rayOrigin, vec3.scale(rayDir, t));
-
-
-
-
 
 
 

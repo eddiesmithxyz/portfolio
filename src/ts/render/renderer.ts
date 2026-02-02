@@ -1,6 +1,6 @@
 import { renderShaders } from "./shaders.ts";
 import { createSquareData } from "./square.ts";
-import { instanceDataLength } from "../common.ts";
+import { instanceDataLength, type SimParams } from "../common.ts";
 
 import { type Mat4, mat4 } from "wgpu-matrix"
 
@@ -23,12 +23,13 @@ export class WGPURenderer {
   private depthTexture: GPUTexture | null = null;
   private multisampleTexture: GPUTexture | null = null;
 
-  private clearColourVal = 25/256;
-  public clearColour = { r: this.clearColourVal, g: this.clearColourVal, b: this.clearColourVal, a: 1 };
   public multisampleCount = 4;
+
+  private colours: number[][] = []; // bg, col1, col2
+  private particleSize: number = 1;
   
-  async init(): Promise<boolean> {
-    this.canvas = document.querySelector("#gpuCanvas") as HTMLCanvasElement;
+  async init(canvas: HTMLCanvasElement): Promise<boolean> {
+    this.canvas = canvas;
 
     if (!navigator.gpu) {
       throw Error("WebGPU not supported.");
@@ -53,11 +54,13 @@ export class WGPURenderer {
     return true;
   }
 
-  createBuffersAndPipeline(instanceCount: number) {
+  createBuffersAndPipeline(params: Required<SimParams>) {
     const vertData = createSquareData()
 
     this.vertexCount = vertData.length / 5;
-    this.instanceCount = instanceCount;
+    this.instanceCount = params.particleCount;
+    this.colours = [params.backgroundColour, params.col1, params.col2];
+    this.particleSize = params.particleSize;
 
     const bufferLayouts = [
       // VERTEX
@@ -169,9 +172,16 @@ export class WGPURenderer {
     const uniformSize =
       16 * 4 +  // view-proj matrix
       16 * 4 +  // inverse view-proj matrix
-      4 * 4 +   // background colour
       3 * 4 + // cam pos
-      1 * 4;  // aspect ratio
+      1 * 4 + // aspect ratio
+
+      4 * 4 + // bg colour 
+      4 * 4 + // colour 1 
+      4 * 4 + // colour 2
+      
+      1 * 4 + // particleSize
+      3 * 4; // padding
+
     this.uniformBuffer = this.device.createBuffer({
       size: uniformSize,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -199,9 +209,15 @@ export class WGPURenderer {
     const uniformData = new Float32Array([
       ...viewProjectionMatrix, 
       ...mat4.inverse(viewProjectionMatrix),
-      this.clearColour.r, this.clearColour.g, this.clearColour.b, this.clearColour.a,
       ...camPos,
-      canvasTexture.width / canvasTexture.height])
+      canvasTexture.width / canvasTexture.height,
+
+      ...this.colours[0], 1,
+      ...this.colours[1], 1,
+      ...this.colours[2], 1,
+    
+      this.particleSize
+    ])
     this.device.queue.writeBuffer(this.uniformBuffer, 0, uniformData, 0);
 
     // create depth texture if needed
@@ -238,7 +254,7 @@ export class WGPURenderer {
     const passEncoder = commandEncoder.beginRenderPass({
       colorAttachments: [
         {
-          clearValue: this.clearColour,
+          clearValue: {r: this.colours[0][0], g: this.colours[0][1], b: this.colours[0][2], a: 1},
           loadOp: "clear",
           storeOp: "store",
           view: this.multisampleTexture.createView(),

@@ -6,6 +6,7 @@ copyFiles()
 
 const settings = createBuildSettings("src/ts/run.ts", { 
   minify: false,
+  outfile: 'lib/index.js',
   
   format: 'esm',
 });

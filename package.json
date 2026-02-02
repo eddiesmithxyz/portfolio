@@ -1,19 +1,13 @@
 {
-  "name": "portfolio",
+  "name": "webgpu-particles",
   "version": "1.0.0",
   "description": "",
-  "homepage": "https://github.com/cake287/portfolio#readme",
-  "bugs": {
-    "url": "https://github.com/cake287/portfolio/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cake287/portfolio.git"
-  },
   "license": "ISC",
   "author": "",
   "type": "module",
-  "main": "index.js",
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
     "build-demo": "node ./build/build-demo.js",
     "build-lib": "node ./build/build-lib.js",

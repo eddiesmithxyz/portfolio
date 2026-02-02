@@ -1,3 +1,3 @@
 import { runSim } from "./ts/run"
 
-runSim();
+runSim(document.getElementById("gpuCanvas") as HTMLCanvasElement);

@@ -1,14 +1,29 @@
 import {WGPURenderer} from "./render/renderer.ts"
 import { WGPUComputer } from "./compute/computer.ts"
 import { Scene } from "./scene.ts";
-import { mat4 } from "wgpu-matrix";
-import { workgroupSize } from "./common.ts";
+import { workgroupSize, type SimParams } from "./common.ts";
+export { type SimParams }
 
 
-const particleCount = 1600 * workgroupSize; // must be multiple of workgroupSize
-const scene = new Scene();
+
+const defaultParams: Required<SimParams> = {
+  particleCount: 1600 * workgroupSize,
+  particleSize: 1.6,
+
+  backgroundColour: [0.1, 0.1, 0.1],
+  col1: [0.3, 0.7, 0.8],
+  col2: [0.0, 0.3, 0.8],
+
+  viewDist: 84,
+
+  allowScroll: true,
+  autoResize: true
+};
 
 
+
+
+let scene: Scene;
 
 let lastTime = Date.now();
 let frameCount = 0;
@@ -35,29 +50,45 @@ function render(renderer: WGPURenderer, computer: WGPUComputer) {
 }
 
 
-export async function runSim() {
+let running = false;
+export async function runSim(canvas: HTMLCanvasElement, params: SimParams = defaultParams) {
+  if (running) return;
+  running = true;
+
+  let finalParams = {
+    ...defaultParams,
+    ...params
+  }
+
+  // particle count must be a multiple of workgroup size
+  finalParams.particleCount = Math.floor(finalParams.particleCount / workgroupSize + 0.1) * workgroupSize;
+
+  scene = new Scene(canvas, finalParams);
+
   const renderer = new WGPURenderer();
-  const success = await renderer.init()
+  const success = await renderer.init(canvas)
   if (!success) 
     return;
 
 
   // resize oberserver
-  const observer = new ResizeObserver(entries => {
-    for (const entry of entries) {
-      const width = entry.contentBoxSize[0].inlineSize;
-      const height = entry.contentBoxSize[0].blockSize;
-      const canvas = entry.target as HTMLCanvasElement;
-      canvas.width = Math.max(1, Math.min(width, renderer.device.limits.maxTextureDimension2D));
-      canvas.height = Math.max(1, Math.min(height, renderer.device.limits.maxTextureDimension2D));
-    }
-  });
-  observer.observe(renderer.canvas);
+  if (finalParams.autoResize) {
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const width = entry.contentBoxSize[0].inlineSize;
+        const height = entry.contentBoxSize[0].blockSize;
+        const canvas = entry.target as HTMLCanvasElement;
+        canvas.width = Math.max(1, Math.min(width, renderer.device.limits.maxTextureDimension2D));
+        canvas.height = Math.max(1, Math.min(height, renderer.device.limits.maxTextureDimension2D));
+      }
+    });
+    observer.observe(renderer.canvas);
+  }
 
 
-  const particleData = scene.createInitialParticleData(particleCount);
-  renderer.createBuffersAndPipeline(particleCount);
-  const computer = new WGPUComputer(renderer.device, particleCount, particleData, renderer.instanceBuffer);
+  const particleData = scene.createInitialParticleData(finalParams.particleCount!);
+  renderer.createBuffersAndPipeline(finalParams);
+  const computer = new WGPUComputer(renderer.device, finalParams.particleCount, particleData, renderer.instanceBuffer);
 
   
 

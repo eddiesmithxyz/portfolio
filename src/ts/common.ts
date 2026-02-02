@@ -4,6 +4,22 @@ const workgroupSize = 64; // number of threads per compute workgroup
 const instanceDataLength = 20; // n*f32 per instance
 
 
+export interface SimParams {
+  particleCount?: number,
+  particleSize?: number,
+
+  backgroundColour?: [number, number, number],
+  col1?: [number, number, number],
+  col2?: [number, number, number],
+
+  viewDist?: number,
+
+  allowScroll?: boolean,
+
+  autoResize?: boolean
+}
+
+
 const logInstanceData = (data: Float32Array, logCount = 10) => {
   const uintView = new Uint32Array(data.buffer);
 
