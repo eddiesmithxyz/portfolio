@@ -15,7 +15,7 @@ fn sdfEddie(p: vec3<f32>) -> f32 {
 
     // D D
     minDist = min(minDist, sdD(pos - vec3<f32>(-1.05, 0.0, 0.0), r) * scale);
-    minDist = min(minDist, sdD(pos - vec3<f32>( 0.0, 0.0, -0.5), r) * scale);
+    minDist = min(minDist, sdD(pos - vec3<f32>( 0.0, 0.0,  0.0), r) * scale);
 
     // I
     minDist = min(minDist, sdI(pos - vec3<f32>( 1.0, 0.0, 0.0), r) * scale);

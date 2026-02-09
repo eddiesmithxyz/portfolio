@@ -10,7 +10,6 @@ import { update2Src } from "./shader/update2";
 
 import { RadixSortKernel } from 'webgpu-radix-sort';
 
-import { type Vec2 } from "wgpu-matrix";
 import type { Scene } from "../scene";
 
 
@@ -47,11 +46,11 @@ export class WGPUComputer {
   private uniforms = new Map<string, {length: number, value: Float32Array | Uint32Array}>([
     ["time",                  {length: 1, value: new Float32Array([0])}],
     ["deltaTime",             {length: 1, value: new Float32Array([0])}],
-    ["mouseDir",              {length: 2, value: new Float32Array([0, 0])}],
-    ["lastMouseDir",          {length: 2, value: new Float32Array([0, 0])}],
     ["animSpeed",             {length: 1, value: new Float32Array([0])}],
     ["particleCount",         {length: 1, value: new Uint32Array([0])}],
     ["camPos",                {length: 4, value: new Float32Array([0, 0, 0, 1])}],
+    ["mouseDir",              {length: 4, value: new Float32Array([0, 0, 0, 1])}],
+    ["lastMouseDir",          {length: 4, value: new Float32Array([0, 0, 0, 1])}],
   ]);
   private uniformsLength = Array.from(this.uniforms.values()).reduce((acc, u) => acc + u.length, 0);
 
@@ -208,11 +207,14 @@ export class WGPUComputer {
     // update uniforms
     this.uniforms.get("time")!.value[0] = scene.time;
     this.uniforms.get("deltaTime")!.value[0] = deltaTime;
-    this.uniforms.get("mouseDir")!.value = scene.mouseDir;
-    this.uniforms.get("lastMouseDir")!.value = scene.lastMouseDir;
     this.uniforms.get("animSpeed")!.value[0] = window.PAUSE_UPDATE ? 0 : 1;
     this.uniforms.get("particleCount")!.value[0] = this.particleCount;
-    this.uniforms.get("camPos")!.value = scene.camPos;
+    this.uniforms.get("camPos")!.value       = new Float32Array([...scene.camPos, 1]);
+    this.uniforms.get("mouseDir")!.value     = new Float32Array([...scene.mouseDir, 1]);
+    this.uniforms.get("lastMouseDir")!.value = new Float32Array([...scene.lastMouseDir, 1]);
+
+    if (!window.HUGE_LOG) console.log(this.uniforms);
+    window.HUGE_LOG = true;
 
     // write uniforms
     const uniformData = new Float32Array(this.uniformsLength);
