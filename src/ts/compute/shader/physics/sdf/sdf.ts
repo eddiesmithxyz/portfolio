@@ -1,5 +1,5 @@
 import { wgslNumStr as str } from "../../../../common";
-import { primitiveSDFsSrc } from "./primitives";
+import { mouseDistortSDFSrc } from "./mouseDistort";
 import { wordSDFSrc } from "./word";
 
 const mass = str(0.05);
@@ -7,46 +7,13 @@ const positionStiffness = str(-1.8);
 const velocityDamping = str(-1.3);
 const gravityClamp = str(400); // limit gravity so it doesn't explode if we're far away
 
-const mouseDisturbRadius = str(3);
-const mouseDisturbSharpness = str(20);
-
-
 export const sdfSrc = /* wgsl */`
 ${wordSDFSrc}
-
-
-fn sdDistort(pos: vec3<f32>) -> f32 {
-    // const sharpness = 0.9;
-    // const period = 0.5;
-    // return max((sin(period*abs(pos.y) + uniforms.time)-sharpness)/(1.0-sharpness), 0.0);
-
-
-    // MOUSE INTERACTION
-
-    // find closest point on line between mouseIntersection and lastMouseIntersection
-    let p1 = uniforms.mouseIntersection;
-    let p2 = uniforms.lastMouseIntersection;  
-    
-    let v = p2 - p1;
-    let w = pos.xy - p1;
-
-    let t = saturate(dot(w, v) / dot(v, v));
-    let closestPoint = p1 + t*v;
-
-
-    const mouseDisturbRadius = ${mouseDisturbRadius};
-    const mouseDisturbSharpness = ${mouseDisturbSharpness};
-
-    var dist = pos.xy - closestPoint;
-    dist *= 1.0/mouseDisturbRadius;
-    
-
-    return mouseDisturbSharpness*exp(-dot(dist, dist));
-}
+${mouseDistortSDFSrc}
 
 fn sdf(pos: vec3<f32>) -> f32 {
     var dist = sdfWord(pos);
-    dist += sdDistort(pos);
+    dist += sdMouseDistort(pos);
 
     return dist;
 }

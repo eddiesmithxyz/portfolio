@@ -8,5 +8,5 @@ export const settings = createBuildSettings("src/ts/run.ts", {
   format: 'esm',
 });
 
-
-await esbuild.build(settings);
+const ctx = await esbuild.context(settings);
+await ctx.watch();

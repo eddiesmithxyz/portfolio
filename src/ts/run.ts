@@ -7,7 +7,7 @@ export { type SimParams }
 
 
 const defaultParams: Required<SimParams> = {
-  particleCount: 1600 * workgroupSize,
+  particleCount: workgroupSize * 1024,
   particleSize: 1.6,
 
   backgroundColour: [0.1, 0.1, 0.1],
@@ -42,16 +42,16 @@ function render(renderer: WGPURenderer, computer: WGPUComputer) {
   
 
 
-  scene.update(renderer.ctx.canvas as HTMLCanvasElement);
+  scene.update(renderer.ctx.canvas as HTMLCanvasElement, deltaTime);
 
-  computer.run(Math.min(deltaTime, 0.1), scene.mouseIntersection, scene.lastMouseIntersection);
+  computer.run(Math.min(deltaTime, 0.1), scene);
   renderer.render(scene.viewProjectionMatrix, scene.camPos);
   requestAnimationFrame(() => render(renderer, computer));
 }
 
 
 let running = false;
-export async function runSim(canvas: HTMLCanvasElement, params: SimParams = defaultParams) {
+export async function runSim(canvas: HTMLCanvasElement, params: SimParams | undefined = undefined) {
   if (running) return;
   running = true;
 

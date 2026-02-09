@@ -14,8 +14,10 @@ export class Scene {
   private mouseDown = false;
   private lastMouseCoord = vec2.create(0, 0);
 
-  public mouseIntersection = vec3.create(0, 0, 0); // intersection of mouse ray with z=0 plane
-  public lastMouseIntersection = vec3.create(0, 0, 0);
+  public mouseDir = vec3.create(1, 0, 0); // mouse ray direction vector (normalized)
+  public lastMouseDir = vec3.create(1, 0, 0);
+
+  public time: number = 0;
 
   constructor(canvas: HTMLCanvasElement, params: Required<SimParams>) {
     window.addEventListener('mousemove', (event) => {
@@ -98,7 +100,9 @@ export class Scene {
   }
 
 
-  update(canvas: HTMLCanvasElement) {
+  update(canvas: HTMLCanvasElement, deltaTime: number) {
+    this.time += deltaTime;
+
     // console.log(this.mouseCoord);
     if (this.mouseDown) {
       const deltaMouse = vec2.subtract(this.mouseCoord, this.lastMouseCoord);
@@ -134,13 +138,9 @@ export class Scene {
 
     nearWorld = vec3.create(nearWorld[0]/nearWorld[3], nearWorld[1]/nearWorld[3], nearWorld[2]/nearWorld[3] ); // perspective correction
     farWorld  = vec3.create(farWorld[0]/farWorld[3], farWorld[1]/farWorld[3], farWorld[2]/farWorld[3] );
-
-    const rayOrigin = nearWorld;
-    const rayDir = vec3.normalize(vec3.sub(farWorld, nearWorld));
-    const t = -rayOrigin[2] / rayDir[2];
     
-    this.lastMouseIntersection = this.mouseIntersection;
-    this.mouseIntersection = vec3.add(rayOrigin, vec3.scale(rayDir, t));
+    this.lastMouseDir = this.mouseDir;
+    this.mouseDir = vec3.normalize(vec3.sub(farWorld, nearWorld));
 
 
 

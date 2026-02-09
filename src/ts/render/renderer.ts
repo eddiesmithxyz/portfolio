@@ -198,11 +198,6 @@ export class WGPURenderer {
 
 
   render(viewProjectionMatrix: Mat4, camPos: Float32Array) {
-    if (!this.initialised) {
-      throw ("WebGPU not initialised");
-    }
-
-
     const canvasTexture = this.ctx.getCurrentTexture();
 
     // place in uniforms

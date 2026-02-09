@@ -11,6 +11,7 @@ import { update2Src } from "./shader/update2";
 import { RadixSortKernel } from 'webgpu-radix-sort';
 
 import { type Vec2 } from "wgpu-matrix";
+import type { Scene } from "../scene";
 
 
 export class WGPUComputer {
@@ -23,7 +24,7 @@ export class WGPUComputer {
   
   private particleCount = 0;
   private maxParticleCount: number;
-  private readonly spawnPeriod = 3; // duration (seconds) of initial period where particles spawn in
+  private readonly spawnPeriod = 3; // duration (seconds) of initial period where particles spawn in. not sure if working
 
 
   private particleDataBuffer0: GPUBuffer; // used as read/write for all but the final shader. used as read for final shader
@@ -41,16 +42,16 @@ export class WGPUComputer {
 
 
   private uniformBuffer: GPUBuffer;
-  private time = 0;
 
 
   private uniforms = new Map<string, {length: number, value: Float32Array | Uint32Array}>([
     ["time",                  {length: 1, value: new Float32Array([0])}],
     ["deltaTime",             {length: 1, value: new Float32Array([0])}],
-    ["mouseIntersection",     {length: 2, value: new Float32Array([0, 0])}],
-    ["lastMouseIntersection", {length: 2, value: new Float32Array([0, 0])}],
+    ["mouseDir",              {length: 2, value: new Float32Array([0, 0])}],
+    ["lastMouseDir",          {length: 2, value: new Float32Array([0, 0])}],
     ["animSpeed",             {length: 1, value: new Float32Array([0])}],
     ["particleCount",         {length: 1, value: new Uint32Array([0])}],
+    ["camPos",                {length: 4, value: new Float32Array([0, 0, 0, 1])}],
   ]);
   private uniformsLength = Array.from(this.uniforms.values()).reduce((acc, u) => acc + u.length, 0);
 
@@ -198,21 +199,20 @@ export class WGPUComputer {
     pass.end();
   }
 
-  async run(deltaTime: number, mouseIntersection: Vec2, lastMouseIntersection: Vec2) {
-    this.time += deltaTime;
-
+  async run(deltaTime: number, scene: Scene) {
     // spawn more particles
     this.particleCount += this.maxParticleCount * (deltaTime / this.spawnPeriod);
     this.particleCount = Math.min(this.particleCount, this.maxParticleCount);
     
 
     // update uniforms
-    this.uniforms.get("time")!.value[0] = this.time;
+    this.uniforms.get("time")!.value[0] = scene.time;
     this.uniforms.get("deltaTime")!.value[0] = deltaTime;
-    this.uniforms.get("mouseIntersection")!.value = mouseIntersection;
-    this.uniforms.get("lastMouseIntersection")!.value = lastMouseIntersection;
+    this.uniforms.get("mouseDir")!.value = scene.mouseDir;
+    this.uniforms.get("lastMouseDir")!.value = scene.lastMouseDir;
     this.uniforms.get("animSpeed")!.value[0] = window.PAUSE_UPDATE ? 0 : 1;
     this.uniforms.get("particleCount")!.value[0] = this.particleCount;
+    this.uniforms.get("camPos")!.value = scene.camPos;
 
     // write uniforms
     const uniformData = new Float32Array(this.uniformsLength);

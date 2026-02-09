@@ -21,10 +21,11 @@ ${particleStruct}
 struct Uniforms {
   time: f32,
   deltaTime: f32,
-  mouseIntersection: vec2<f32>,
-  lastMouseIntersection: vec2<f32>,
+  mouseDir: vec2<f32>,
+  lastMouseDir: vec2<f32>,
   animSpeed: f32,
   particleCount: u32,
+  camPos: vec4<f32>
 }
 @group(0) @binding(2) var<uniform> uniforms: Uniforms;
 @group(0) @binding(3) var<storage, read_write> cellIds: array<u32>;

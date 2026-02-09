@@ -18,6 +18,8 @@ const viscosityConstant = 0.118;
 
 const particleMass = 1;
 
+const groupSideForce = 2.0;
+
 
 
 // INTERNAL PARAMS
@@ -39,6 +41,8 @@ const particleFluidMass = ${str(particleMass)};
 const p0 = ${str(referenceDensity)};
 const K = ${str(pressureConstant)};
 const e = ${str(viscosityConstant)};
+
+const groupSideForce = ${str(groupSideForce)};
 
 fn particleDensity(particle: Particle) -> vec4<f32> {
   // also finds group neighbour centroid (.yzw of return)
@@ -117,7 +121,7 @@ fn fluidAccel(particle: Particle, id: u32) -> vec3<f32> {
 
   
   // group move to top/bottom
-  force += vec3<f32>(0.0, -1.0*particle.group * particle.density, 0.0);
+  force += vec3<f32>(0.0, -groupSideForce * particle.group * particle.density, 0.0);
   
 
 

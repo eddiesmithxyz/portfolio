@@ -11,7 +11,12 @@
   "scripts": {
     "build-demo": "node ./build/build-demo.js",
     "build-lib": "node ./build/build-lib.js",
-    "start": "node ./build/serve.js",
+    
+    "serve-demo": "node ./build/serve-demo.js",
+    "serve-lib": "node ./build/serve-lib.js",
+
+    "dev": "concurrently --kill-others \"npm run serve-demo\" \"npm run serve-lib\"",
+
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
